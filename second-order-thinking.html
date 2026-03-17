@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Second Order Thinking</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede9;
+    --text: #1a1a1a;
+    --text2: #666660;
+    --text3: #999994;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #378ADD;
+    --blue-dark: #185FA5;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --green-bg: #E1F5EE;
+    --green-border: #0F6E56;
+    --green-text: #085041;
+    --amber-bg: #FAEEDA;
+    --amber-border: #BA7517;
+    --amber-text: #633806;
+    --red-bg: #FCEBEB;
+    --red-border: #A32D2D;
+    --red-text: #791F1F;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #f0efe8;
+      --text2: #a0a09a;
+      --text3: #666660;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue-bg: #0C447C;
+      --blue-text: #B5D4F4;
+      --green-bg: #085041;
+      --green-text: #9FE1CB;
+      --amber-bg: #633806;
+      --amber-text: #FAC775;
+      --red-bg: #791F1F;
+      --red-text: #F7C1C1;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  .screen { display: none; max-width: 480px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  .screen.active { display: block; }
+
+  /* Nav */
+  .nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .nav-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .nav-btn { font-size: 13px; color: var(--blue); background: none; border: none; cursor: pointer; padding: 4px 0; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 1.5rem; }
+  .progress-fill { height: 100%; border-radius: 2px; background: var(--blue); transition: width 0.4s ease; }
+  .step-label { font-size: 12px; color: var(--text3); margin-bottom: 0.4rem; letter-spacing: 0.04em; }
+  .step-title { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 0.4rem; line-height: 1.3; }
+  .step-hint { font-size: 14px; color: var(--text2); margin-bottom: 1.25rem; line-height: 1.6; }
+
+  /* Inputs */
+  textarea { width: 100%; min-height: 110px; font-size: 15px; line-height: 1.6; padding: 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); resize: vertical; font-family: inherit; }
+  textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(55,138,221,0.15); }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 1.25rem; }
+  button { cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; border-radius: var(--radius); padding: 11px 18px; border: 0.5px solid var(--border2); background: transparent; color: var(--text); transition: background 0.15s, transform 0.1s; }
+  button:hover { background: var(--bg2); }
+  button:active { transform: scale(0.98); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue-dark); }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-full { width: 100%; }
+
+  /* Tags */
+  .tag-section-label { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; margin: 1rem 0 0.5rem; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 13px; padding: 6px 12px; border-radius: 20px; border: 0.5px solid var(--border2); color: var(--text2); cursor: pointer; transition: background 0.15s; user-select: none; }
+  .tag:active { transform: scale(0.97); }
+  .tag.selected { background: var(--blue-bg); border-color: var(--blue-dark); color: var(--blue-text); }
+  .tag.warning { border-color: var(--amber-border); color: var(--amber-text); background: var(--amber-bg); }
+  .tag.warning.selected { background: var(--amber-border); border-color: var(--amber-text); color: var(--amber-bg); }
+
+  /* Verdict */
+  .verdict-box { padding: 1.25rem; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg2); margin-bottom: 1.25rem; }
+  .summary-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+  .summary-item:last-child { border-bottom: none; }
+  .summary-q { font-size: 12px; color: var(--text3); min-width: 110px; flex-shrink: 0; padding-top: 1px; }
+  .summary-a { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .score-row { display: flex; gap: 10px; margin: 1rem 0; }
+  .score-btn { flex: 1; padding: 14px 8px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text2); transition: all 0.15s; text-align: center; font-family: inherit; }
+  .score-btn.yes { border-color: var(--green-border); background: var(--green-bg); color: var(--green-text); }
+  .score-btn.maybe { border-color: var(--amber-border); background: var(--amber-bg); color: var(--amber-text); }
+  .score-btn.no { border-color: var(--red-border); background: var(--red-bg); color: var(--red-text); }
+  .alert-box { padding: 10px 14px; border-radius: var(--radius); margin-bottom: 1rem; font-size: 13px; line-height: 1.5; }
+  .alert-amber { border: 0.5px solid var(--amber-border); background: var(--amber-bg); color: var(--amber-text); }
+  .result-card { padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); margin-bottom: 10px; font-size: 14px; color: var(--text); line-height: 1.5; }
+
+  /* History */
+  .history-empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 14px; }
+  .history-card { padding: 1rem 1.25rem; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg); margin-bottom: 12px; cursor: pointer; transition: background 0.15s; }
+  .history-card:hover { background: var(--bg2); }
+  .history-date { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .history-idea { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+  .history-verdict { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+  .hv-yes { background: var(--green-bg); color: var(--green-text); }
+  .hv-maybe { background: var(--amber-bg); color: var(--amber-text); }
+  .hv-no { background: var(--red-bg); color: var(--red-text); }
+  .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 14px; }
+
+  /* Home */
+  .home-header { margin-bottom: 2rem; }
+  .home-title { font-size: 26px; font-weight: 500; color: var(--text); margin-bottom: 0.4rem; }
+  .home-sub { font-size: 15px; color: var(--text2); line-height: 1.5; }
+  .home-card { padding: 1.25rem; border-radius: var(--radius-lg); border: 0.5px solid var(--border); background: var(--bg2); margin-bottom: 12px; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: space-between; }
+  .home-card:hover { background: var(--bg3); }
+  .home-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+  .home-card-sub { font-size: 13px; color: var(--text2); }
+  .home-arrow { font-size: 18px; color: var(--text3); }
+
+  /* Save status */
+  .save-status { font-size: 12px; color: var(--text3); text-align: center; margin-top: 0.75rem; min-height: 18px; }
+  .save-status.ok { color: var(--green-text); }
+  .save-status.err { color: var(--red-text); }
+</style>
+</head>
+<body>
+
+<!-- Home -->
+<div class="screen active" id="screen-home">
+  <div style="padding-top:1rem;">
+    <div class="home-header">
+      <div class="home-title">Second order thinking</div>
+      <div class="home-sub">Think before you act. Every decision, stress-tested.</div>
+    </div>
+    <div class="home-card" onclick="startNew()">
+      <div>
+        <div class="home-card-title">New decision</div>
+        <div class="home-card-sub">Walk through the 7-step process</div>
+      </div>
+      <div class="home-arrow">→</div>
+    </div>
+    <div class="home-card" onclick="showHistory()">
+      <div>
+        <div class="home-card-title">Past entries</div>
+        <div class="home-card-sub">Review decisions you've logged</div>
+      </div>
+      <div class="home-arrow">→</div>
+    </div>
+  </div>
+</div>
+
+<!-- Form -->
+<div class="screen" id="screen-form">
+  <div class="nav">
+    <button class="nav-btn" onclick="goHome()">← Home</button>
+    <div class="nav-title">New decision</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog" style="width:14%"></div></div>
+  <div id="form-body"></div>
+</div>
+
+<!-- History -->
+<div class="screen" id="screen-history">
+  <div class="nav">
+    <button class="nav-btn" onclick="goHome()">← Home</button>
+    <div class="nav-title">Past entries</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div id="history-body"></div>
+</div>
+
+<!-- Detail -->
+<div class="screen" id="screen-detail">
+  <div class="nav">
+    <button class="nav-btn" onclick="showHistory()">← Back</button>
+    <div class="nav-title">Entry detail</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div id="detail-body"></div>
+</div>
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxxUidQqj0lbT1UapZ-xQwkIaeB6a-3zr9zqleojy09VUEJrhcrc5TvYyWs1rir86RHpQ/exec';
+
+const riskTags = [
+  'Financial loss','Damaged relationships','Loss of stability',
+  'Reputation risk','Health impact','Legal consequences',
+  'Regret / no going back','Emotional burnout','Dependency on this working',
+  'Loss of self-esteem','Lower confidence','Feeling of regret',
+  'Retaliation','Dominique makes accusations','Looks bad in court','Dominique weaponizes this'
+];
+const motivationTags = ['Acting to recover losses','Driven by boredom'];
+
+const steps = [
+  { id:'idea', label:'Step 1 of 7 — the idea', title:'What do you want to do?', hint:"State your idea clearly. Don't filter yourself yet — just describe the action or decision.", type:'textarea', placeholder:'e.g. "I want to quit my job and go full-time on my trading bot..."', key:'idea' },
+  { id:'why', label:'Step 2 of 7 — motivation', title:'Why do you want to do this?', hint:"What's driving you? Is it emotion, logic, fear of missing out, or a genuine opportunity?", type:'textarea', placeholder:'e.g. "I\'m confident in my system and want to focus fully on it..."', key:'why' },
+  { id:'first', label:'Step 3 of 7 — first-order consequences', title:'What happens immediately?', hint:'Think about the direct, obvious results of this action in the short term (days to weeks).', type:'textarea', placeholder:'e.g. "I lose my salary. I have more time. I feel relieved but also anxious..."', key:'first' },
+  { id:'second', label:'Step 4 of 7 — second-order consequences', title:'What happens next because of that?', hint:'Think two moves ahead. What does each first-order consequence lead to — including things you might not want?', type:'textarea', placeholder:'e.g. "Without regular income, I might overtrade under pressure. My relationships might suffer..."', key:'second' },
+  { id:'risks', label:'Step 5 of 7 — worst case', title:'What could go badly wrong?', hint:'Be brutally honest. Tap any that apply — then add anything else specific to your situation.', type:'risks', key:'risks' },
+  { id:'reverse', label:'Step 6 of 7 — reversibility', title:'Can you undo this?', hint:'How reversible is this decision? And what would it cost — in time, money, or pride — to reverse it?', type:'textarea', placeholder:'e.g. "I could return to employment but it might take 6 months..."', key:'reverse' },
+  { id:'verdict', label:'Step 7 of 7 — the verdict', title:'Having thought it through...', hint:'', type:'verdict', key:'verdict' }
+];
+
+const answers = {};
+let currentStep = 0;
+let selectedTags = [];
+let riskNote = '';
+let currentVerdict = '';
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goHome() { show('home'); }
+
+function startNew() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  selectedTags = [];
+  riskNote = '';
+  currentVerdict = '';
+  currentStep = 0;
+  show('form');
+  renderStep();
+}
+
+function renderStep() {
+  const step = steps[currentStep];
+  const pct = Math.round(((currentStep + 1) / steps.length) * 100);
+  document.getElementById('prog').style.width = pct + '%';
+  if (step.type === 'verdict') { renderVerdict(); return; }
+
+  let html = `<div class="step-label">${step.label}</div>
+    <div class="step-title">${step.title}</div>
+    <div class="step-hint">${step.hint}</div>`;
+
+  if (step.type === 'textarea') {
+    html += `<textarea id="ans" placeholder="${step.placeholder}">${answers[step.key] || ''}</textarea>`;
+  }
+
+  if (step.type === 'risks') {
+    html += `<div class="tag-row">`;
+    riskTags.forEach(t => {
+      const sel = selectedTags.includes(t) ? 'selected' : '';
+      html += `<span class="tag ${sel}" data-tag="${t}">${t}</span>`;
+    });
+    html += `</div>`;
+    html += `<div class="tag-section-label">Am I acting for the wrong reasons?</div>`;
+    html += `<div class="tag-row">`;
+    motivationTags.forEach(t => {
+      const sel = selectedTags.includes(t) ? 'selected' : '';
+      html += `<span class="tag warning ${sel}" data-tag="${t}">${t}</span>`;
+    });
+    html += `</div>`;
+    html += `<textarea id="ans" placeholder="Anything else specific to your situation?" style="margin-top:1rem;min-height:70px;">${riskNote}</textarea>`;
+  }
+
+  html += `<div class="btn-row">`;
+  if (currentStep > 0) html += `<button onclick="prevStep()">← Back</button>`;
+  html += `<button class="btn-primary" onclick="nextStep()" style="flex:1;">Continue →</button>`;
+  html += `</div>`;
+
+  document.getElementById('form-body').innerHTML = html;
+
+  document.querySelectorAll('.tag').forEach(el => {
+    el.addEventListener('click', () => {
+      const t = el.dataset.tag;
+      if (selectedTags.includes(t)) {
+        selectedTags = selectedTags.filter(x => x !== t);
+        el.classList.remove('selected');
+      } else {
+        selectedTags.push(t);
+        el.classList.add('selected');
+      }
+    });
+  });
+}
+
+function nextStep() {
+  const step = steps[currentStep];
+  if (step.type === 'textarea') {
+    const val = document.getElementById('ans').value.trim();
+    if (!val) { document.getElementById('ans').focus(); return; }
+    answers[step.key] = val;
+  }
+  if (step.type === 'risks') {
+    riskNote = document.getElementById('ans').value.trim();
+    answers.risks = [...selectedTags];
+    answers.risksNote = riskNote;
+  }
+  currentStep++;
+  renderStep();
+  window.scrollTo(0,0);
+}
+
+function prevStep() {
+  currentStep--;
+  renderStep();
+  window.scrollTo(0,0);
+}
+
+function renderVerdict() {
+  const risks = answers.risks || [];
+  const allRisks = risks.length > 0
+    ? risks.join(', ') + (answers.risksNote ? '. ' + answers.risksNote : '')
+    : (answers.risksNote || 'None noted');
+  const motWarnings = risks.filter(r => motivationTags.includes(r));
+
+  let html = `<div class="step-label">Step 7 of 7 — the verdict</div>
+    <div class="step-title">Is this still a good idea?</div>
+    <div class="step-hint" style="margin-bottom:1.25rem;">You've done the thinking. Here's what you said:</div>`;
+
+  if (motWarnings.length > 0) {
+    html += `<div class="alert-box alert-amber" style="margin-bottom:1rem;"><strong>Watch out:</strong> you flagged this decision may be driven by ${motWarnings.join(' and ').toLowerCase()}. Sit with that before deciding.</div>`;
+  }
+
+  html += `<div class="verdict-box">
+    <div class="summary-item"><div class="summary-q">The idea</div><div class="summary-a">${answers.idea || '—'}</div></div>
+    <div class="summary-item"><div class="summary-q">Why</div><div class="summary-a">${answers.why || '—'}</div></div>
+    <div class="summary-item"><div class="summary-q">Immediately</div><div class="summary-a">${answers.first || '—'}</div></div>
+    <div class="summary-item"><div class="summary-q">Then what</div><div class="summary-a">${answers.second || '—'}</div></div>
+    <div class="summary-item"><div class="summary-q">Risks</div><div class="summary-a">${allRisks}</div></div>
+    <div class="summary-item"><div class="summary-q">Reversible?</div><div class="summary-a">${answers.reverse || '—'}</div></div>
+  </div>
+  <div class="step-hint" style="margin-bottom:0.75rem;">Now that you've seen it written out — what's your gut saying?</div>
+  <div class="score-row">
+    <div class="score-btn" id="v-yes" onclick="pickVerdict('yes')">Yes, do it</div>
+    <div class="score-btn" id="v-maybe" onclick="pickVerdict('maybe')">Not yet</div>
+    <div class="score-btn" id="v-no" onclick="pickVerdict('no')">No, step back</div>
+  </div>
+  <div id="verdict-result"></div>
+  <div class="save-status" id="save-status"></div>
+  <div class="btn-row" style="margin-top:1rem;">
+    <button onclick="prevStep()">← Back</button>
+    <button onclick="startNew()" style="flex:1;">Start over</button>
+  </div>`;
+
+  document.getElementById('form-body').innerHTML = html;
+}
+
+function pickVerdict(v) {
+  currentVerdict = v;
+  document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('yes','maybe','no'));
+  document.getElementById('v-' + v).classList.add(v);
+
+  const msgs = {
+    yes: "You've stress-tested this and still believe in it. Go ahead — but set a clear checkpoint to review how it's going.",
+    maybe: "Something's holding you back — and that's useful information. What would need to change before this becomes a yes?",
+    no: "Stepping back takes discipline — especially when the idea was exciting. What did you learn from this exercise?"
+  };
+
+  document.getElementById('verdict-result').innerHTML = `<div class="result-card">${msgs[v]}</div>`;
+
+  saveToSheet(v);
+}
+
+function saveToSheet(verdict) {
+  const status = document.getElementById('save-status');
+  status.textContent = 'Saving to Google Sheets...';
+  status.className = 'save-status';
+
+  const risks = answers.risks || [];
+  const allRisks = risks.join(', ') + (answers.risksNote ? '. ' + answers.risksNote : '');
+
+  const payload = {
+    idea: answers.idea || '',
+    why: answers.why || '',
+    first: answers.first || '',
+    second: answers.second || '',
+    risks: allRisks,
+    reverse: answers.reverse || '',
+    verdict: verdict === 'yes' ? 'Yes, do it' : verdict === 'maybe' ? 'Not yet' : 'No, step back'
+  };
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    status.textContent = 'Saved to Google Sheets';
+    status.className = 'save-status ok';
+  }).catch(() => {
+    status.textContent = 'Could not save — check your connection';
+    status.className = 'save-status err';
+  });
+}
+
+function showHistory() {
+  show('history');
+  const body = document.getElementById('history-body');
+  body.innerHTML = '<div class="loading">Loading entries...</div>';
+
+  fetch(SHEET_URL + '?action=getAll')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.rows || data.rows.length === 0) {
+        body.innerHTML = '<div class="history-empty">No entries yet. Complete a decision to see it here.</div>';
+        return;
+      }
+      const rows = data.rows.slice().reverse();
+      body.innerHTML = rows.map((row, i) => {
+        const verdict = row[7] || '';
+        const vClass = verdict.includes('Yes') ? 'hv-yes' : verdict.includes('Not') ? 'hv-maybe' : 'hv-no';
+        return `<div class="history-card" onclick="showDetail(${data.rows.length - 1 - i}, ${JSON.stringify(data.rows).split('"').join('&quot;')})">
+          <div class="history-date">${row[0] || ''}</div>
+          <div class="history-idea">${row[1] || 'Untitled'}</div>
+          <span class="history-verdict ${vClass}">${verdict || 'No verdict'}</span>
+        </div>`;
+      }).join('');
+    })
+    .catch(() => {
+      body.innerHTML = '<div class="history-empty">Could not load entries. Check your connection.</div>';
+    });
+}
+
+function showDetail(idx, rows) {
+  const row = rows[idx];
+  if (!row) return;
+  show('detail');
+
+  const labels = ['Date','Idea','Why','Immediately','Then what','Risks','Reversible?','Verdict'];
+  const verdict = row[7] || '';
+  const vClass = verdict.includes('Yes') ? 'hv-yes' : verdict.includes('Not') ? 'hv-maybe' : 'hv-no';
+
+  let html = `<div style="margin-bottom:1.25rem;"><span class="history-verdict ${vClass}" style="font-size:13px;">${verdict || '—'}</span></div>
+    <div class="verdict-box">`;
+  for (let i = 0; i < labels.length; i++) {
+    if (i === 0) continue;
+    html += `<div class="summary-item"><div class="summary-q">${labels[i]}</div><div class="summary-a">${row[i] || '—'}</div></div>`;
+  }
+  html += `</div><div style="font-size:12px;color:var(--text3);margin-top:0.5rem;">${row[0] || ''}</div>`;
+
+  document.getElementById('detail-body').innerHTML = html;
+}
+</script>
+</body>
+</html>
